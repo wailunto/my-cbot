@@ -28,10 +28,10 @@ namespace cAlgo
         private bool _bearishTrendTraded;
         private int _lastTrendDirection;
 
-        private double _buyEntryRsi;
-        private double _sellEntryRsi;
-        private double _totalRsiGain;
-        private double _totalRsiLoss;
+        private double _buyEntryClose;
+        private double _sellEntryClose;
+        private double _totalPriceGain;
+        private double _totalPriceLoss;
 
         private int _currentLossStreak;
         private int _maxConsecutiveLosses;
@@ -53,10 +53,10 @@ namespace cAlgo
             _bearishTrendTraded = false;
             _lastTrendDirection = 0;
 
-            _buyEntryRsi = double.NaN;
-            _sellEntryRsi = double.NaN;
-            _totalRsiGain = 0;
-            _totalRsiLoss = 0;
+            _buyEntryClose = double.NaN;
+            _sellEntryClose = double.NaN;
+            _totalPriceGain = 0;
+            _totalPriceLoss = 0;
 
             _currentLossStreak = 0;
             _maxConsecutiveLosses = 0;
@@ -98,7 +98,7 @@ namespace cAlgo
             if (!_hasBuyPosition && !_bullishTrendTraded && ShouldBuy(index))
             {
                 BuySignalOut[index] = _baseIndicator.RsiOut[index];
-                _buyEntryRsi = _baseIndicator.RsiOut[index];
+                _buyEntryClose = Bars.ClosePrices[index];
                 _hasBuyPosition = true;
                 _bullishTrendTraded = true;
                 if (_firstTradeDate == DateTime.MinValue)
@@ -110,11 +110,11 @@ namespace cAlgo
             // =====================================================
             if (_hasBuyPosition && ShouldExitBuy(index))
             {
-                double exitRsi = _baseIndicator.RsiOut[index];
-                ExitBuySignalOut[index] = exitRsi;
-                UpdateTradeMetrics(index, exitRsi - _buyEntryRsi);
+                double exitClose = Bars.ClosePrices[index];
+                ExitBuySignalOut[index] = _baseIndicator.RsiOut[index];
+                UpdateTradeMetrics(index, exitClose - _buyEntryClose);
                 _hasBuyPosition = false;
-                _buyEntryRsi = double.NaN;
+                _buyEntryClose = double.NaN;
             }
 
             // =====================================================
@@ -123,7 +123,7 @@ namespace cAlgo
             if (!_hasSellPosition && !_bearishTrendTraded && ShouldSell(index))
             {
                 SellSignalOut[index] = _baseIndicator.RsiOut[index];
-                _sellEntryRsi = _baseIndicator.RsiOut[index];
+                _sellEntryClose = Bars.ClosePrices[index];
                 _hasSellPosition = true;
                 _bearishTrendTraded = true;
                 if (_firstTradeDate == DateTime.MinValue)
@@ -135,11 +135,11 @@ namespace cAlgo
             // =====================================================
             if (_hasSellPosition && ShouldExitSell(index))
             {
-                double exitRsi = _baseIndicator.RsiOut[index];
-                ExitSellSignalOut[index] = exitRsi;
-                UpdateTradeMetrics(index, _sellEntryRsi - exitRsi);
+                double exitClose = Bars.ClosePrices[index];
+                ExitSellSignalOut[index] = _baseIndicator.RsiOut[index];
+                UpdateTradeMetrics(index, _sellEntryClose - exitClose);
                 _hasSellPosition = false;
-                _sellEntryRsi = double.NaN;
+                _sellEntryClose = double.NaN;
             }
 
             // =====================================================
@@ -156,21 +156,21 @@ namespace cAlgo
             ExitSellSignalOut[index] = double.NaN;
         }
 
-        private void UpdateTradeMetrics(int index, double rsiPnl)
+        private void UpdateTradeMetrics(int index, double pricePnl)
         {
             _closedTrades++;
 
-            if (rsiPnl > 0)
+            if (pricePnl > 0)
             {
-                _totalRsiGain += rsiPnl;
+                _totalPriceGain += pricePnl;
                 _winningTrades++;
                 _currentLossStreak = 0;
                 return;
             }
 
-            if (rsiPnl < 0)
+            if (pricePnl < 0)
             {
-                _totalRsiLoss += Math.Abs(rsiPnl);
+                _totalPriceLoss += Math.Abs(pricePnl);
                 _currentLossStreak++;
 
                 if (_currentLossStreak > _maxConsecutiveLosses)
@@ -183,9 +183,9 @@ namespace cAlgo
 
         private void UpdateDisplay()
         {
-            string profitFactorText = _totalRsiLoss == 0
-                ? "RSI Profit Factor: N/A"
-                : $"RSI Profit Factor: {_totalRsiGain / _totalRsiLoss:0.00}";
+            string profitFactorText = _totalPriceLoss == 0
+                ? "Price Profit Factor: N/A"
+                : $"Price Profit Factor: {_totalPriceGain / _totalPriceLoss:0.00}";
 
             string winRateText = _closedTrades == 0
                 ? "Win Rate: N/A"

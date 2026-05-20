@@ -39,6 +39,7 @@ namespace cAlgo
 
         private int _closedTrades;
         private int _winningTrades;
+        private DateTime _firstTradeDate;
 
         protected override void Initialize()
         {
@@ -63,6 +64,7 @@ namespace cAlgo
 
             _closedTrades = 0;
             _winningTrades = 0;
+            _firstTradeDate = DateTime.MinValue;
 
             UpdateDisplay();
         }
@@ -99,6 +101,8 @@ namespace cAlgo
                 _buyEntryRsi = _baseIndicator.RsiOut[index];
                 _hasBuyPosition = true;
                 _bullishTrendTraded = true;
+                if (_firstTradeDate == DateTime.MinValue)
+                    _firstTradeDate = Bars.OpenTimes[index];
             }
 
             // =====================================================
@@ -122,6 +126,8 @@ namespace cAlgo
                 _sellEntryRsi = _baseIndicator.RsiOut[index];
                 _hasSellPosition = true;
                 _bearishTrendTraded = true;
+                if (_firstTradeDate == DateTime.MinValue)
+                    _firstTradeDate = Bars.OpenTimes[index];
             }
 
             // =====================================================
@@ -191,12 +197,20 @@ namespace cAlgo
                 ? "Last Max Loss Date: N/A"
                 : $"Last Max Loss Date: {_maxConsecutiveLossesLastTime:yyyy-MM-dd HH:mm}";
 
+            string totalTradesText = $"Total Trades: {_closedTrades}";
+
+            string firstTradeDateText = _firstTradeDate == DateTime.MinValue
+                ? "First Trade Date: N/A"
+                : $"First Trade Date: {_firstTradeDate:yyyy-MM-dd HH:mm}";
+
             Chart.DrawStaticText(
                 "rsiStats",
                 profitFactorText + "\n" +
                 winRateText + "\n" +
                 maxLossText + "\n" +
-                maxLossDateText,
+                maxLossDateText + "\n" +
+                totalTradesText + "\n" +
+                firstTradeDateText,
                 VerticalAlignment.Top,
                 HorizontalAlignment.Right,
                 Color.Gold);

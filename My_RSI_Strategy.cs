@@ -183,6 +183,9 @@ namespace cAlgo
 
         private void UpdateDisplay()
         {
+            string totalProfitText = $"Total Profit: {_totalRsiGain:0.00}";
+            string totalLossText = $"Total Loss: {_totalRsiLoss:0.00}";
+
             string profitFactorText = _totalRsiLoss == 0
                 ? "RSI Profit Factor: N/A"
                 : $"RSI Profit Factor: {_totalRsiGain / _totalRsiLoss:0.00}";
@@ -205,6 +208,8 @@ namespace cAlgo
 
             Chart.DrawStaticText(
                 "rsiStats",
+                totalProfitText + "\n" +
+                totalLossText + "\n" +
                 profitFactorText + "\n" +
                 winRateText + "\n" +
                 maxLossText + "\n" +
